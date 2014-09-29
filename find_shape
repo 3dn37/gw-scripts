@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+### config #################################################################
+use strict;
+use warnings;
+
+my$line = qq(@ARGV);
+die "i need ip address for work\n" unless ($line);
+$line =~ s/\s.*//;
+
+my@ip;
+my@iip = split(/\./, $line);
+foreach (@iip)
+{
+    push(@ip, sprintf('%02x', $_));
+}
+
+print "ip ";
+if (system "/usr/sbin/ipset list allowed_users | /bin/grep \"$line\$\"")
+{
+    print "$line\nis disabled\n---------------------\n";
+} else {
+    print "is enabled\n---------------------\n";
+}
+
+print "shape inbound:  ";
+system "/usr/sbin/tc class show dev eth3 classid 1:$ip[2]$ip[3] | /bin/awk '{ print \$8 }'";
+#system "/usr/sbin/tc class show dev eth3 classid 1:$ip[2]$ip[3]";
+print "\nshape outbound: ";
+system "/usr/sbin/tc class show dev ifb0 classid 1:$ip[2]$ip[3] | /bin/awk '{ print \$8 }'";
+#system "/usr/sbin/tc class show dev ifb0 classid 1:$ip[2]$ip[3]";
+print "\n---------------------\n";
+
+
